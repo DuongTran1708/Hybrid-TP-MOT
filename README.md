@@ -1,4 +1,4 @@
-# PBVS 2025 - Thermal Pedestrian Multiple Object Tracking Challenge (TP-MOT)
+# PBVS 2026 - Thermal Pedestrian Multiple Object Tracking Challenge (TP-MOT)
 
 ## Automation Lab, Sungkyunkwan University
 
