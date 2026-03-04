@@ -1,0 +1,186 @@
+---
+dataset: &dataset "pbvs26_thermal"
+# Dataset name. It is also the name of the directory inside `data_dir`.
+name: &camera_name "pbvs26"
+# Camera name is also used as the unique ID (NO FILE EXTENSION).
+id_: *camera_name
+# Camera's unique ID.
+
+data:
+  type: "*.png"
+  # Video file or image folder. By default, assume all video are put inside
+  stream: null
+  # If we run directly with the input stream, `stream` must be of some value.
+  # By default, `null` means run with video file defined in `path`.
+  shape: &shape [960, 1280, 3]
+  # Input size as [H, W, C].
+  frame_rate: &frame_rate 10
+  # Frame rate of the video.
+  process_num: 3
+  # Number of processes which runs in parallel
+  class_labels:
+    file: "configs/class_labels_1cls.json"
+    # Config file containing class_labels.
+
+data_loader:
+  data: "images"
+  # Data source. Can be a path to an image file, a directory, a video, or
+  # a stream. It can also be a pathname pattern to images.
+  batch_size: &batch_size 10
+  # Number of samples in one forward & backward pass.
+  queue_size: *batch_size
+  # Number of slot in the queue to store the frame
+  data_dir_prefix: "data/tmot_dataset/images/val/"
+  # Prefix of the dataset
+  data_dir_seq: ["seq2", "seq17", "seq22", "seq47", "seq54", "seq66"]
+  # Sequence of the dataset
+  data_dir_postfix: "thermal/"
+  # Postfix of the dataset
+
+detector:
+  name: "yolov11"
+  # Name of the main model for detector
+  model_cfg:
+    # Detector model config.
+    cfg: "yolov11s.yaml"
+    # YOLOv5 variances.
+    nc: 1
+    # Number of classes.
+  weights: "models_zoo/pbvs26_tmot/yolov11s_tmot_v2.0_1920_1GPU/weights/best.pt"
+  # Pretrained weights file.
+  shape: &detector_shape [1920, 1920, 3]
+  # Input size as [C, H, W].
+  min_confidence: 0.2
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  nms_max_overlap: 0.7
+  # Maximum detection overlap (non-maxima suppression threshold).
+  device: &device "0"
+  # CUDDevice, i.e. 0 or 0,1,2,3 or cpu
+  batch_size: *batch_size
+  # Number of samples in one forward & backward pass.
+  folder_out: "yolov11s_v2.0_1920_imgz_1920_1GPU"
+  # The output folder
+  queue_size: 30
+  # Number of slot in the queue to store the detection result
+
+detector_reidentification:
+  reid_model: &detector_reid_model
+    # ReID model for heuristic matching. If None, no ReID is used.
+    - model:
+        name: "solider_reid"
+        # Name of the identification model.
+        ratio: 1.0
+        # Weighting factor between appearance and motion features.
+        model_cfg: "models_zoo/pbvs26_tmot/solider_reid/rswin_tiny_reid.yml"
+        # ReID model config.
+        weight: "models_zoo/pbvs26_tmot/solider_reid/rswin_tiny_reid_NEW.pth"  # * 4, new trained
+        # Pretrained weights file.
+  pose_model: &detector_pose_model null
+
+tracker:
+  name: "hybridtpmot"
+  # Name of the tracker.
+  max_age: &max_age 40
+  # Max number of frame keep the object before deleting.
+  min_hit: 3
+  # The number of frame which has matching bounding box of the detected object
+  # before the object is considered becoming the track.
+  iou_threshold: &iou_threshold_track 0.001
+  # The Intersection over Union between two track with their bounding box.
+  folder_out: "hybridtpmot"
+  # The output folder
+  min_confidence_det: 0.2
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  is_reload_model: False
+  # Does the tracking model need to be reset after running 1 sequence
+  hybridtpmot_config:
+    track_high_thresh: 0.6 # threshold for the first association
+    track_low_thresh: 0.5 # threshold for the second association
+    new_track_thresh: 0.7 # threshold for init new track if the detection does not match any tracks
+    track_buffer: *max_age # buffer to calculate the time when to remove tracks
+    match_thresh_stage_1: 3.2
+    # 3.2, threshold for matching tracks (using distance matrix)
+    match_thresh_stage_2: 2.4
+    # 2.4, threshold for matching tracks (using distance matrix)
+    match_thresh_stage_3: 3.2
+    # 3.2, threshold for matching tracks (using distance matrix)
+    fuse_score: False # Whether to fuse confidence scores with the iou distances before matching
+      # min_box_area: 10  # threshold for min box areas(for tracker evaluation, not used for now)
+    #    iou: *iou_threshold_track # threshold for iou between two boxes
+    # BoT-SORT settings
+    gmc_method: none # method of global motion compensation
+    # "orb", "sift", "ecc", "sparseOptFlow", "none"
+    proximity_thresh: 0.5
+    # Threshold for spatial proximity (IoU) between tracks and detections.
+    appearance_thresh: 0.8
+    # Threshold for appearance similarity (ReID embeddings) between tracks and detections.
+    with_reid: True
+    # whether to use ReID model for association
+    reid_model: *detector_reid_model
+    # Pretrained weights file.
+    asso_func: "ciou"  # "ciou", "giou", "diou"
+    # Association function. One of: ["iou", "giou", "ciou", "diou", "hiou"].
+
+tracker_reidentification:
+  name: "only_reid"
+  # Name of the identification method.
+  max_frame_skipped: 40
+  # Max number of frame keep the object before deleting.
+  reid_model: &tracker_reid_model
+    # ReID model for heuristic matching. If None, no ReID is used.
+    - model:
+        name: "solider_reid"
+        # Name of the identification model.
+        ratio: 1.0
+        # Weighting factor between appearance and motion features.
+        model_cfg: "models_zoo/pbvs26_tmot/solider_reid/rswin_tiny_reid.yml"
+        # ReID model config.
+        weight: "models_zoo/pbvs26_tmot/solider_reid/rswin_tiny_reid_NEW.pth"  # * 4, new trained
+        # Pretrained weights file.
+    - model:
+        name: "yolo_reid"
+        # Name of the identification model.
+        ratio: 0.0
+        # Weighting factor between appearance and motion features.
+        model_cfg: ""
+        # ReID model config.
+        weight: "models_zoo/pbvs26_tmot/yolov11s_tmot_v2.0_1920_4GPUs/weights/best.pt"
+        # Path to pretrained weights file.
+  pose_model: &tracker_pose_model null
+
+heuristic:
+  min_length_tracklet: 4
+  # Minimum length of tracklet to be considered for heuristic matching.
+  min_confidence_det: 0.77
+  # Minimum detection confidence to be considered for heuristic matching.
+  max_reid_distance: 0.2  # 0.2
+  # Maximum ReID distance to be considered a match.
+  min_frame_gap: 1
+  # Minimum frame gap between tracklets to be considered for matching.
+  max_frame_gap: 20
+  # Maximum frame gap between tracklets to be considered for matching.
+  ratio_height_width: 6.0
+  # Ratio between height and width of the bounding box.
+  reid_model: *tracker_reid_model
+  pose_model: *tracker_pose_model
+
+data_writer:
+  output_dir: "data/tmot_dataset/output_pbvs26"
+  # Output video file or a directory.
+  shape: *shape
+  # Output size [H, W, C].
+  frame_rate: *frame_rate
+  # Frame rate of the video.
+  fourcc: "mp4v"
+  # Video codec. One of: ["mp4v", "xvid", "mjpg", "wmv1"].
+  queue_size: 30
+  # Number of slot in the queue to store data for writer
+  min_confidence: 0.2
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  final_file: "final_result.txt"
+  # Name of file result file
+
+...
