@@ -53,7 +53,7 @@ Hybrid-TP-MOT
 
 ##### a. Check weight
 
-Download weight from release of github [release](.)
+Download weight from release of github [release](https://github.com/DuongTran1708/Hybrid-TP-MOT/releases/tag/v0.0.1)
 
 The folder structure should be as following:
 ```
@@ -63,6 +63,9 @@ Hybrid-TP-MOT
 │   │   ├──yolov11s_tmot_v2.0_1920_1GPU
 │   │   │   ├──weight
 │   │   │   │   └──best.pt
+│   │   ├──solider_reid
+│   │   │   ├──rswin_tiny_reid.yml
+│   │   │   └──rswin_tiny_reid_NEW.pth
 ```
 
 
@@ -81,9 +84,15 @@ Hybrid-TP-MOT
 ├── data
 │   ├──tmot_dataset
 │   │   ├──output_pbvs26
+│   │   │   ├──tracking
+│   │   │   │   └──hybridtpmot
 ```
 
 #### IV. Citation
+
+```
+UPDATING
+```
 
 #### V. Acknowledgement
 
