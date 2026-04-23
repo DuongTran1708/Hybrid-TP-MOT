@@ -4,6 +4,8 @@
 
 ## Team: SKKU-AutoLab
 
+## Paper accepted at the 22nd IEEE Workshop on Perception Beyond the Visible Spectrum (PBVS), CVPR 2026.
+
 ---
 
 #### I. Installation
@@ -88,13 +90,29 @@ Hybrid-TP-MOT
 │   │   │   │   └──hybridtpmot
 ```
 
-#### IV. Citation
+#### IV. Data Processing
+
+The data processing code is in the folder **Hybrid-TP-MOT/utilities**.
 
 ```
-UPDATING
+utilities/dataset_MOT_to_reid.py
+utilities/dataset_MOT_to_pose_bbox_segmen_reid.py
 ```
 
-#### V. Acknowledgement
+
+#### V. Citation
+
+```
+@InProceedings{DuongTran_2026_CVPRW,
+    author    = {Tran, Duong Nguyen-Ngoc and Pham, Long Hoang and Pham-Nam Ho, Quoc and Tran, Chi Dai and Huynh, Ngoc Doan-Minh and Nguyen, Huy-Hung and Jeon, Jae Wook},
+    title     = {A Hybrid Data-Centric Framework for Thermal Multiple-Object Tracking with Complex Motion Patterns},
+    booktitle = {Proceedings of the Computer Vision and Pattern Recognition Conference (CVPR) Workshops},
+    month     = {June},
+    year      = {2026}
+}
+```
+
+#### VI. Acknowledgement
 
 Most of the code is adapted from [Mon](https://github.com/phlong3105/mon).
 
