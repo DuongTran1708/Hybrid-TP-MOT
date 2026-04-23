@@ -4,7 +4,7 @@
 
 ## Team: SKKU-AutoLab
 
-## Paper accepted at the 22nd IEEE Workshop on Perception Beyond the Visible Spectrum (PBVS), CVPR 2026.
+## Paper accepted at the 22nd IEEE Workshop on Perception Beyond the Visible Spectrum (PBVS), CVPR 2026. [Paper](asset/PBVS-5.pdf)
 
 ---
 
